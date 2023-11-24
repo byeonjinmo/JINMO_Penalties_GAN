@@ -17,21 +17,17 @@ num_channel = 3  # CIFAR-10 has 3 channels
 dir_name = "R_ob_final_v_GAN"
 noise_size = 150
 
-
 # 허 초기화 함수 정의
 def init_weights(m):
     if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
         nn.init.kaiming_normal_(m.weight, mode='fan_in', nonlinearity='leaky_relu')
         if m.bias is not None:
             nn.init.constant_(m.bias, 0)
-
-
 # CSV 파일 준비
 csv_file = os.path.join(dir_name, "R_ob_final_v_GAN.csv")
 with open(csv_file, 'w', newline='') as file:
     writer = csv.writer(file)
-    writer.writerow(["Epoch", "Generator Loss", "Discriminator Loss", "Discriminator Accuracy on Real",
-                     "Discriminator Accuracy on Fake", "Time Taken (seconds)"])
+    writer.writerow(["Epoch", "Generator Loss", "Discriminator Loss", "Discriminator Accuracy on Real", "Discriminator Accuracy on Fake", "Time Taken (seconds)"])
 # Device setting
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print("Now using {} devices".format(device))
@@ -59,7 +55,6 @@ data_loader = torch.utils.data.DataLoader(
     batch_size=batch_size,
     shuffle=True
 )
-
 
 # Declares discriminator
 class Discriminator(nn.Module):
@@ -141,23 +136,22 @@ initial_no_penalty_epochs = 0  # 처음 에포크 동안은 패널티 없음
 
 # Training part
 for epoch in range(num_epoch):
-    # 로계위
+    #로계위
     g_loss_accum = 0.0
     d_loss_accum = 0.0
     start_time = time.time()
-    # 정계위
+    #정계위
     correct_real = 0
     correct_fake = 0
     # 페널티 카운터의 카운터 초기화
     # p_count = 0
-    # # 페널티 카운터 초기화
-    # g_penalty_count = 0
-    # d_penalty_count = 0
+    # 페널티 카운터 초기화
+    g_penalty_count = 0
+    d_penalty_count = 0
     # if p_count == 1:
     #     g_penalty_count = 0
     #     d_penalty_count = 0
     #     p_count = 0
-
     for i, (images, _) in enumerate(data_loader):
         current_batch_size = images.size(0)  # 현재 배치의 크기
 
@@ -169,7 +163,7 @@ for epoch in range(num_epoch):
         g_optimizer.zero_grad()
         z = torch.randn(current_batch_size, noise_size, 1, 1, device=device)
         fake_images = generator(z)
-        g_loss = criterion(discriminator(fake_images), real_label) * g_penalty_weight  # 페널티 적용
+        g_loss = criterion(discriminator(fake_images), real_label) * g_penalty_weight #페널티 적용
         g_loss.backward()
         g_optimizer.step()
 
@@ -177,7 +171,7 @@ for epoch in range(num_epoch):
         d_optimizer.zero_grad()
         real_loss = criterion(discriminator(images.to(device)), real_label)
         fake_loss = criterion(discriminator(fake_images.detach()), fake_label)
-        d_loss = (real_loss + fake_loss) / 2 * d_penalty_weight  # 페널티 적용
+        d_loss = (real_loss + fake_loss) / 2 * d_penalty_weight #페널티 적용
         d_loss.backward()
         d_optimizer.step()
 
@@ -213,18 +207,29 @@ for epoch in range(num_epoch):
     if epoch > initial_no_penalty_epochs and epoch % 10 == 0:
         if avg_g_loss > avg_d_loss:
             g_penalty_weight += 0.2
+            g_penalty_count += 1
             d_penalty_weight = max(1.0, d_penalty_weight - 0.1)
+            d_penalty_count = 0  # 판별자의 연속 패널티 카운터 초기화
             print(f"Epoch {epoch}: 후훗 이런 이런..나는 앞서가는 자를 좋아하지 않아. 판별자 네놈에게 페널티를 부여하지..")
         else:
             d_penalty_weight += 0.2
+            d_penalty_count += 1
             g_penalty_weight = max(1.0, g_penalty_weight - 0.1)
-            print(f"Epoch {epoch}: 후훗 이런 이런..나는 앞서가는 자를 좋아하지 않아. 생성자 네놈에게 페널티를 부여하지..")
+            g_penalty_count = 0  # 생성자의 연속 패널티 카운터 초기화
+
+        # 연속적인 패널티가 특정 횟수 이상인 경우 추가 페널티 부여
+        if g_penalty_count > 4:
+            g_penalty_weight += 0.1  # 생성자의 패널티를 추가로 증가
+            print("생성자에 추가 페널티 부여")
+        if d_penalty_count > 4:
+            d_penalty_weight += 0.1  # 판별자의 패널티를 추가로 증가
+            print("판별자에 추가 페널티 부여")
 
     # 에포크당 판별자의 정확도 계산 및 출력
     accuracy_real = correct_real / (len(data_loader) * batch_size)
     accuracy_fake = correct_fake / (len(data_loader) * batch_size)
     print(
-        f"Epoch {epoch}: Discriminator Accuracy on Real Images: {accuracy_real:.2f}, on Fake Images: {accuracy_fake:.2f}")
+    f"Epoch {epoch}: Discriminator Accuracy on Real Images: {accuracy_real:.2f}, on Fake Images: {accuracy_fake:.2f}")
 
     # 시간 기록
     end_time = time.time()
