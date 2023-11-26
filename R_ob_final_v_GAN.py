@@ -205,7 +205,7 @@ for epoch in range(num_epoch):
 
     # 패널티 조정 로직
     if epoch > initial_no_penalty_epochs and epoch % 10 == 0:
-        if avg_g_loss > avg_d_loss:
+        if avg_g_loss < avg_d_loss:
             g_penalty_weight += 0.05
             g_penalty_count += 1
             d_penalty_weight = max(1.0, d_penalty_weight - 0.02)
