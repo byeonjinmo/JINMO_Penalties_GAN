@@ -1,3 +1,4 @@
+User
 import os
 import torch
 import torch.nn as nn
@@ -10,12 +11,17 @@ import csv
 
 # Hyper-parameters & Variables setting
 num_epoch = 500
-batch_size = 64
+batch_size = 32
 learning_rate = 0.0002
 img_size = 32
 num_channel = 3  # CIFAR-10 has 3 channels
-dir_name = "R_ob_final_v_GAN"
+dir_name = "+filter"
 noise_size = 150
+
+# 클래스 필터링 함수 정의
+def filter_classes(dataset, exclude_classes):
+    filtered_indices = [i for i in range(len(dataset)) if dataset.targets[i] not in exclude_classes]
+    return torch.utils.data.Subset(dataset, filtered_indices)
 
 # 허 초기화 함수 정의
 def init_weights(m):
@@ -24,7 +30,7 @@ def init_weights(m):
         if m.bias is not None:
             nn.init.constant_(m.bias, 0)
 # CSV 파일 준비
-csv_file = os.path.join(dir_name, "R_ob_final_v_GAN.csv")
+csv_file = os.path.join(dir_name, "+filter.csv")
 with open(csv_file, 'w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(["Epoch", "Generator Loss", "Discriminator Loss", "Discriminator Accuracy on Real", "Discriminator Accuracy on Fake", "Time Taken (seconds)"])
@@ -41,7 +47,8 @@ transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])  # Normalize for RGB images
 
-# CIFAR-10 dataset setting
+
+# CIFAR-10 데이터셋 설정 및 필터링
 CIFAR10_dataset = torchvision.datasets.CIFAR10(
     root='./data/',
     train=True,
@@ -49,9 +56,15 @@ CIFAR10_dataset = torchvision.datasets.CIFAR10(
     download=True
 )
 
-# Data loader
+# 배제할 클래스 목록
+exclude_classes = [6, 7, 8, 9]
+
+# 필터링된 데이터셋 생성
+filtered_dataset = filter_classes(CIFAR10_dataset, exclude_classes)
+
+# 필터링된 데이터셋으로 데이터 로더 생성
 data_loader = torch.utils.data.DataLoader(
-    dataset=CIFAR10_dataset,
+    dataset=filtered_dataset,
     batch_size=batch_size,
     shuffle=True
 )
@@ -76,6 +89,8 @@ class Discriminator(nn.Module):
 
         ds_size = img_size // 2 ** 4
         self.adv_layer = nn.Sequential(nn.Linear(256 * ds_size ** 2, 1), nn.Sigmoid())
+        self.aux_layer = nn.Sequential(nn.Linear(256 * ds_size ** 2, 10),
+                                       nn.Softmax())
 
     def forward(self, img):
         out = self.conv_blocks(img)
@@ -186,12 +201,12 @@ for epoch in range(num_epoch):
         # 손실 누적
         g_loss_accum += g_loss.item()
         d_loss_accum += d_loss.item()
-
-        if (i + 1) % 782 == 0:
+        #만약 데이터 필터시 수치 잘 보이도록 배치 사이즈 수정  ex)2로 나눠서 전체 크기 확인 후 변경 추천
+        if (i + 1) % 469 == 0:
             print("Epoch [ {}/{} ]  Step [ {}/{} ]  d_loss : {:.5f}  g_loss : {:.5f}"
                   .format(epoch, num_epoch, i + 1, len(data_loader), d_loss.item(), g_loss.item()))
 
-        if (i + 1) % 782 == 0:
+        if (i + 1) % 469 == 0:
             with torch.no_grad():
                 z = torch.randn(100, noise_size, 1, 1, device=device)  # 100개의 노이즈 벡터 생성
                 fake_images = generator(z)
@@ -218,11 +233,11 @@ for epoch in range(num_epoch):
 
         # 연속적인 패널티가 특정 횟수 이상인 경우 추가 페널티 부여
         if g_penalty_count > 4:
-            g_penalty_weight += 0.05 # 생성자의 패널티를 추가로 증가
+            g_penalty_weight += 0.05  # 생성자의 패널티를 추가로 증가
             g_penalty_count = 0  # 생성자의 연속 패널티 카운터 초기화
             print("생성자에 추가 페널티 부여")
         if d_penalty_count > 4:
-            d_penalty_weight += 0.05 # 판별자의 패널티를 추가로 증가
+            d_penalty_weight += 0.05  # 판별자의 패널티를 추가로 증가
             d_penalty_count = 0  # 판별자의 연속 패널티 카운터 초기화
             print("판별자에 추가 페널티 부여")
 
