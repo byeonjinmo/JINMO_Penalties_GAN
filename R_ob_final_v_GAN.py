@@ -209,20 +209,21 @@ for epoch in range(num_epoch):
             g_penalty_weight += 0.05
             g_penalty_count += 1
             d_penalty_weight = max(1.0, d_penalty_weight - 0.02)
-            d_penalty_count = 0  # 판별자의 연속 패널티 카운터 초기화
-            print(f"Epoch {epoch}: 후훗 이런 이런..나는 앞서가는 자를 좋아하지 않아. 판별자 네놈에게 페널티를 부여하지..")
+            print(f"Epoch {epoch}: 후훗 이런 이런..나는 앞서가는 자를 좋아하지 않아. 생성자 네놈에게 페널티를 부여하지..")
         else:
             d_penalty_weight += 0.05
             d_penalty_count += 1
             g_penalty_weight = max(1.0, g_penalty_weight - 0.02)
-            g_penalty_count = 0  # 생성자의 연속 패널티 카운터 초기화
+            print(f"Epoch {epoch}: 후훗 이런 이런..나는 앞서가는 자를 좋아하지 않아. 판별자 네놈에게 페널티를 부여하지..")
 
         # 연속적인 패널티가 특정 횟수 이상인 경우 추가 페널티 부여
         if g_penalty_count > 4:
             g_penalty_weight += 0.05 # 생성자의 패널티를 추가로 증가
+            g_penalty_count = 0  # 생성자의 연속 패널티 카운터 초기화
             print("생성자에 추가 페널티 부여")
         if d_penalty_count > 4:
             d_penalty_weight += 0.05 # 판별자의 패널티를 추가로 증가
+            d_penalty_count = 0  # 판별자의 연속 패널티 카운터 초기화
             print("판별자에 추가 페널티 부여")
 
     # 에포크당 판별자의 정확도 계산 및 출력
