@@ -122,7 +122,7 @@ class Generator(nn.Module):
         )
 
     def forward(self, x):
-        x = x.view(-1, noise_size)  # 변경된 부분
+        x = x.view(-1, noise_size)
         out = self.l1(x)
         out = out.view(out.shape[0], 256, self.init_size, self.init_size)
         img = self.conv_blocks(out)
