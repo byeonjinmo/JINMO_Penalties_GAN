@@ -142,8 +142,8 @@ d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=learning_rate)
 g_optimizer = torch.optim.Adam(generator.parameters(), lr=learning_rate)
 
 # 패널티 가중치 초기화
-g_penalty_weight = 0.0
-d_penalty_weight = 0.0
+g_penalty_weight = 1.0
+d_penalty_weight = 1.0
 
 # Training part
 initial_no_penalty_epochs = 0  # 처음 에포크 동안은 패널티 없음
