@@ -11,7 +11,7 @@ import csv
 
 # Hyper-parameters & Variables setting
 num_epoch = 500
-batch_size = 32
+batch_size = 128
 learning_rate = 0.0002
 img_size = 32
 num_channel = 3  # CIFAR-10 has 3 channels
@@ -57,7 +57,7 @@ CIFAR10_dataset = torchvision.datasets.CIFAR10(
 )
 
 # 배제할 클래스 목록
-exclude_classes = [6, 7, 8, 9]
+exclude_classes = [8, 9]
 
 # 필터링된 데이터셋 생성
 filtered_dataset = filter_classes(CIFAR10_dataset, exclude_classes)
@@ -122,7 +122,7 @@ class Generator(nn.Module):
         )
 
     def forward(self, x):
-        x = x.view(-1, noise_size)
+        x = x.view(-1, noise_size)  # 변경된 부분
         out = self.l1(x)
         out = out.view(out.shape[0], 256, self.init_size, self.init_size)
         img = self.conv_blocks(out)
@@ -143,11 +143,25 @@ d_optimizer = torch.optim.Adam(discriminator.parameters(), lr=learning_rate)
 g_optimizer = torch.optim.Adam(generator.parameters(), lr=learning_rate)
 
 # 패널티 가중치 초기화
-g_penalty_weight = 1.0
-d_penalty_weight = 1.0
+g_penalty_weight = 0.0
+d_penalty_weight = 0.0
 
 # Training part
 initial_no_penalty_epochs = 0  # 처음 에포크 동안은 패널티 없음
+
+# 페널티 카운터 초기화
+g_penalty_count = 0
+d_penalty_count = 0
+
+# 연속적인 패널티가 특정 횟수 이상인 경우 추가 페널티 부여
+if g_penalty_count > 4:
+    g_penalty_weight += 0.5  # 생성자의 패널티를 추가로 증가
+    g_penalty_count = 0  # 생성자의 연속 패널티 카운터 초기화
+    print("생성자에 추가 페널티 부여")
+if d_penalty_count > 4:
+    d_penalty_weight += 0.5  # 판별자의 패널티를 추가로 증가
+    d_penalty_count = 0  # 판별자의 연속 패널티 카운터 초기화
+    print("판별자에 추가 페널티 부여")
 
 # Training part
 for epoch in range(num_epoch):
@@ -160,9 +174,7 @@ for epoch in range(num_epoch):
     correct_fake = 0
     # 페널티 카운터의 카운터 초기화
     # p_count = 0
-    # 페널티 카운터 초기화
-    g_penalty_count = 0
-    d_penalty_count = 0
+
     # if p_count == 1:
     #     g_penalty_count = 0
     #     d_penalty_count = 0
@@ -202,11 +214,11 @@ for epoch in range(num_epoch):
         g_loss_accum += g_loss.item()
         d_loss_accum += d_loss.item()
         #만약 데이터 필터시 수치 잘 보이도록 배치 사이즈 수정  ex)2로 나눠서 전체 크기 확인 후 변경 추천
-        if (i + 1) % 469 == 0:
+        if (i + 1) % 313 == 0:
             print("Epoch [ {}/{} ]  Step [ {}/{} ]  d_loss : {:.5f}  g_loss : {:.5f}"
                   .format(epoch, num_epoch, i + 1, len(data_loader), d_loss.item(), g_loss.item()))
 
-        if (i + 1) % 469 == 0:
+        if (i + 1) % 313 == 0:
             with torch.no_grad():
                 z = torch.randn(100, noise_size, 1, 1, device=device)  # 100개의 노이즈 벡터 생성
                 fake_images = generator(z)
@@ -219,27 +231,18 @@ for epoch in range(num_epoch):
     avg_d_loss = d_loss_accum / len(data_loader)
 
     # 패널티 조정 로직
-    if epoch > initial_no_penalty_epochs and epoch % 10 == 0:
+    if epoch > initial_no_penalty_epochs and epoch % 40 == 0:
         if avg_g_loss < avg_d_loss:
-            g_penalty_weight += 0.05
+            g_penalty_weight += 0.5
             g_penalty_count += 1
-            d_penalty_weight = max(1.0, d_penalty_weight - 0.02)
+            d_penalty_weight = max(1.0, d_penalty_weight - 0.001)
             print(f"Epoch {epoch}: 후훗 이런 이런..나는 앞서가는 자를 좋아하지 않아. 생성자 네놈에게 페널티를 부여하지..")
         else:
-            d_penalty_weight += 0.05
+            d_penalty_weight += 0.5
             d_penalty_count += 1
-            g_penalty_weight = max(1.0, g_penalty_weight - 0.02)
+            g_penalty_weight = max(1.0, g_penalty_weight - 0.001)
             print(f"Epoch {epoch}: 후훗 이런 이런..나는 앞서가는 자를 좋아하지 않아. 판별자 네놈에게 페널티를 부여하지..")
 
-        # 연속적인 패널티가 특정 횟수 이상인 경우 추가 페널티 부여
-        if g_penalty_count > 4:
-            g_penalty_weight += 0.05  # 생성자의 패널티를 추가로 증가
-            g_penalty_count = 0  # 생성자의 연속 패널티 카운터 초기화
-            print("생성자에 추가 페널티 부여")
-        if d_penalty_count > 4:
-            d_penalty_weight += 0.05  # 판별자의 패널티를 추가로 증가
-            d_penalty_count = 0  # 판별자의 연속 패널티 카운터 초기화
-            print("판별자에 추가 페널티 부여")
 
     # 에포크당 판별자의 정확도 계산 및 출력
     accuracy_real = correct_real / (len(data_loader) * batch_size)
