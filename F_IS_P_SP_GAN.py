@@ -11,10 +11,10 @@ import csv
 # Hyper-parameters & Variables setting
 num_epoch = 200
 batch_size = 64
-learning_rate = 0.0002
+learning_rate = 0.0001
 img_size = 32
 num_channel = 3  # CIFAR-10 has 3 channels
-dir_name = "+filter"
+dir_name = "+filter(2_+0.0001"
 noise_size = 150
 
 # 클래스 필터링 함수 정의
@@ -29,7 +29,7 @@ def init_weights(m):
         if m.bias is not None:
             nn.init.constant_(m.bias, 0)
 # CSV 파일 준비
-csv_file = os.path.join(dir_name, "+filter.csv")
+csv_file = os.path.join(dir_name, "+filter(2_+0.0001.csv")
 with open(csv_file, 'w', newline='') as file:
     writer = csv.writer(file)
     writer.writerow(["Epoch", "Generator Loss", "Discriminator Loss", "Discriminator Accuracy on Real", "Discriminator Accuracy on Fake", "Time Taken (seconds)"])
@@ -231,15 +231,15 @@ for epoch in range(num_epoch):
 
     # 패널티 조정 로직
     if epoch > initial_no_penalty_epochs and epoch % 2 == 0:
-        if avg_g_loss > avg_d_loss:
-            g_penalty_weight -= 0.1
+        if avg_g_loss < avg_d_loss:
+            g_penalty_weight += 0.0001
             g_penalty_count += 1
-            #d_penalty_weight = max(1.0, d_penalty_weight - 0.001)
+            d_penalty_weight = max(1.0, d_penalty_weight - 0.0001)
             print(f"Epoch {epoch}: 생페.")
         else:
-            d_penalty_weight -= 0.1
+            d_penalty_weight += 0.0001
             d_penalty_count += 1
-            #g_penalty_weight = max(1.0, g_penalty_weight - 0.001)
+            g_penalty_weight = max(1.0, g_penalty_weight - 0.0001)
             print(f"Epoch {epoch}: 판페.")
 
 
@@ -257,8 +257,6 @@ for epoch in range(num_epoch):
     with open(csv_file, 'a', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([epoch + 1, avg_g_loss, avg_d_loss, accuracy_real, accuracy_fake, epoch_time])
-
-
-# 현재는 0.5 패널티  처음만 패널티 적용 제외여  / 학습률 0.001 - > 0.0002로 변경하였음 (확실히 안정적인 손실률과 acc를 보여줌 ( 패널티 2번 적용 / 불안정한 손실률 + 정확도 70을 넘어감 )
-# 하여 패널티 0.02변경
-# 늦은 주기로 하면 이상히 미미함 핛급에 무리가 가도 일단 주기적으로 강행해봄 2회마다 페널티 감행
+        # 현재는 0.5 패널티  처음만 패널티 적용 제외여  / 학습률 0.001 - > 0.0002로 변경하였음 (확실히 안정적인 손실률과 acc를 보여줌 ( 패널티 2번 적용 / 불안정한 손실률 + 정확도 70을 넘어감 )
+        # 하여 패널티 0.02변경
+        # 늦은 주기로 하면 이상히 미미함 핛급에 무리가 가도 일단 주기적으로 강행해봄 2회마다 페널티 감행
