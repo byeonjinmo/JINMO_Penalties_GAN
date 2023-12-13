@@ -13,7 +13,7 @@ batch_size = 100
 learning_rate = 0.0002
 img_size = 28 * 28
 num_channel = 1
-dir_name = "GAN_results_PSTx_+pn+w_init+do(0.5)"
+dir_name = "GAN_results_PSTx_+pn(0.5)+drop(0.25)"
 
 noise_size = 100
 hidden_size1 = 256
@@ -85,7 +85,6 @@ MNIST_dataset = torchvision.datasets.MNIST(root='../../data/',
 data_loader = torch.utils.data.DataLoader(dataset=MNIST_dataset,
                                           batch_size=batch_size,
                                           shuffle=True)
-
 
 # Declares discriminator
 class Discriminator(nn.Module):
@@ -217,12 +216,14 @@ class Generator2(nn.Module):
         return x
 
 # Initialize generator/Discriminator
-discriminator = Discriminator2().apply(weights_init)    # 각각 허 초기화 모델들에 적용 .apply(weights_init)
-generator = Generator1().apply(weights_init)
-
+discriminator = Discriminator2()
+generator = Generator1()
 # Device setting
 discriminator = discriminator.to(device)
 generator = generator.to(device)
+# 각각 허 초기화 모델들에 적용 .apply(weights_init)  적용 실패 ^_< 자꾸 오류남 ㅋㅋㅋ ㅜ
+# generator.apply(weights_init)
+# discriminator.apply(weights_init)
 
 # Loss function & Optimizer setting
 criterion = nn.BCELoss()
@@ -235,7 +236,7 @@ initial_no_penalty_epochs = 0  # 처음 에포크 동안은 패널티 없음
 Training part
 """
 # 정확한 모델 판별을 위한 각 손실 밑 퍼포먼스 값 csv파일로 저장하기 위한 코드
-with open('gan_training_metrics_PSTx_+pn(0.5)+w_init+do.csv', mode='w', newline='') as file:
+with open('gan_training_metrics_PSTx_+pn(0.5)+drop(0.25).csv', mode='w', newline='') as file:
     writer = csv.writer(file)
     # Write the header
     writer.writerow(['Epoch', 'D_Loss', 'G_Loss', 'D_Performance', 'G_Performance'])
