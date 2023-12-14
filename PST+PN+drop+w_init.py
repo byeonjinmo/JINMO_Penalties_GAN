@@ -20,6 +20,7 @@ hidden_size1 = 256
 hidden_size2 = 512
 hidden_size3 = 1024
 # 점진적 학습을 위한 히든 사이즈 새로 구성
+hidden_size00 = 32
 hidden_size0 = 64
 hidden_size01 = 128
 
@@ -91,36 +92,12 @@ class Discriminator(nn.Module):
     def __init__(self):
         super(Discriminator, self).__init__()
 
-        self.linear1 = nn.Linear(img_size, hidden_size3)
-        self.bn1 = nn.BatchNorm1d(hidden_size3)# 배치 정규화 적용
-        self.linear2 = nn.Linear(hidden_size3, hidden_size2)
-        #self.bn1 = nn.BatchNorm1d(hidden_size2)# 배치 정규화 적용
-        self.linear3 = nn.Linear(hidden_size2, hidden_size1)
-        #self.bn1 = nn.BatchNorm1d(hidden_size1) # 배치 정규화 적용
-        self.linear4 = nn.Linear(hidden_size1, 1)
-        # 드롭아웃 레이어 추가
-        self.dropout = nn.Dropout(0.25)
-        self.leaky_relu = nn.LeakyReLU(0.2)
-        self.sigmoid = nn.Sigmoid()
-
-    def forward(self, x):
-        x = self.leaky_relu(self.linear1(x))
-        x = self.leaky_relu(self.linear2(x))
-        x = self.leaky_relu(self.linear3(x))
-        x = self.linear4(x)
-        x = self.sigmoid(x)
-        return x
-# 점진적 단계 학습의 1단계 / 쉬운 모델 레이어 중 제일 낮은 레이어 크기를 128로 변경
-class Discriminator1(nn.Module):
-    def __init__(self):
-        super(Discriminator1, self).__init__()
-
         self.linear1 = nn.Linear(img_size, hidden_size2)
-        self.bn1 = nn.BatchNorm1d(hidden_size2) # 배치 정규화 적용
+        self.bn1 = nn.BatchNorm1d(hidden_size2)# 배치 정규화 적용
         self.linear2 = nn.Linear(hidden_size2, hidden_size1)
-        #self.bn1 = nn.BatchNorm1d(hidden_size1) # 배치 정규화 적용
+        #self.bn1 = nn.BatchNorm1d(hidden_size2)# 배치 정규화 적용
         self.linear3 = nn.Linear(hidden_size1, hidden_size01)
-        #self.bn1 = nn.BatchNorm1d(hidden_size01)    # 배치 정규화 적용
+        #self.bn1 = nn.BatchNorm1d(hidden_size1) # 배치 정규화 적용
         self.linear4 = nn.Linear(hidden_size01, 1)
         # 드롭아웃 레이어 추가
         self.dropout = nn.Dropout(0.25)
@@ -134,18 +111,42 @@ class Discriminator1(nn.Module):
         x = self.linear4(x)
         x = self.sigmoid(x)
         return x
-# 점진적 단계 학습의 2단계 / 쉬운 모델 레이어 중 제일 낮은 레이어 크기를 64로 변경
+# 점진적 단계 학습의 1단계 / 쉬운 모델 레이어 중 제일 낮은 레이어 크기를 64로 변경
+class Discriminator1(nn.Module):
+    def __init__(self):
+        super(Discriminator1, self).__init__()
+
+        self.linear1 = nn.Linear(img_size, hidden_size1)
+        self.bn1 = nn.BatchNorm1d(hidden_size1) # 배치 정규화 적용
+        self.linear2 = nn.Linear(hidden_size1, hidden_size01)
+        #self.bn1 = nn.BatchNorm1d(hidden_size1) # 배치 정규화 적용
+        self.linear3 = nn.Linear(hidden_size01, hidden_size0)
+        #self.bn1 = nn.BatchNorm1d(hidden_size01)    # 배치 정규화 적용
+        self.linear4 = nn.Linear(hidden_size0, 1)
+        # 드롭아웃 레이어 추가
+        self.dropout = nn.Dropout(0.25)
+        self.leaky_relu = nn.LeakyReLU(0.2)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        x = self.leaky_relu(self.linear1(x))
+        x = self.leaky_relu(self.linear2(x))
+        x = self.leaky_relu(self.linear3(x))
+        x = self.linear4(x)
+        x = self.sigmoid(x)
+        return x
+# 점진적 단계 학습의 2단계 / 쉬운 모델 레이어 중 제일 낮은 레이어 크기를 32로 변경
 class Discriminator2(nn.Module):
     def __init__(self):
         super(Discriminator2, self).__init__()
 
-        self.linear1 = nn.Linear(img_size, hidden_size1)
-        self.bn1 = nn.BatchNorm1d(hidden_size1)  # 배치 정규화 적용
-        self.linear2 = nn.Linear(hidden_size1, hidden_size01)
+        self.linear1 = nn.Linear(img_size, hidden_size01)
+        self.bn1 = nn.BatchNorm1d(hidden_size01)  # 배치 정규화 적용
+        self.linear2 = nn.Linear(hidden_size01, hidden_size0)
         #self.bn1 = nn.BatchNorm1d(hidden_size01)  # 배치 정규화 적용
-        self.linear3 = nn.Linear(hidden_size01, hidden_size0)
+        self.linear3 = nn.Linear(hidden_size0, hidden_size00)
         #self.bn1 = nn.BatchNorm1d(hidden_size0)  # 배치 정규화 적용
-        self.linear4 = nn.Linear(hidden_size0, 1)
+        self.linear4 = nn.Linear(hidden_size00, 1)
         # 드롭아웃 레이어 추가
         self.dropout = nn.Dropout(0.25)
         self.leaky_relu = nn.LeakyReLU(0.2)
@@ -235,7 +236,7 @@ class Generator2(nn.Module):
 
 # Initialize generator/Discriminator
 discriminator = Discriminator2()
-generator = Generator1()
+generator = Generator2()
 # Device setting
 discriminator = discriminator.to(device)
 generator = generator.to(device)
@@ -261,28 +262,22 @@ with open('gan_training_metrics_PSTx_+pn(0.7)+drop(0.25)+BN(1_3).csv', mode='w',
     for epoch in range(num_epoch):
         # 점진적 모델 변경 실제 학습 루프에 적용
         if opt.step == 1:
-            # Transition for Generator
             new_generator = Generator1()
             generator = new_generator
-            generator = mix_weights(generator, new_generator, alpha=0.7)
-
-            # Transition for Discriminator_
-            # new_discriminator = Discriminator2()
-            # discriminator = new_discriminator
-            # discriminator = mix_weights(discriminator, new_discriminator, alpha=0.5)
-
-        if opt.step == 2:
-            new_generator = Generator()
-            generator = mix_weights(generator, new_generator, alpha=0.7)
+            generator = mix_weights(generator, new_generator, alpha=0.5)    # 선형혼합 하이퍼파라미터 수치 조정
 
             new_discriminator = Discriminator1()
             discriminator = new_discriminator
-            discriminator = mix_weights(discriminator, new_discriminator, alpha=0.7)
+            discriminator = mix_weights(discriminator, new_discriminator, alpha=0.5)     # 선형혼합 하이퍼파라미터 수치 조정
 
-            # # Transition for Discriminator
-            # new_discriminator = Discriminator()
-            # discriminator = new_discriminator
-            # discriminator = mix_weights(discriminator, new_discriminator, alpha=0.5)
+        if opt.step == 2:
+            new_generator = Generator()
+            generator = new_generator
+            generator = mix_weights(generator, new_generator, alpha=0.5)    # 선형혼합 하이퍼파라미터 수치 조정
+
+            new_discriminator = Discriminator()
+            discriminator = new_discriminator
+            discriminator = mix_weights(discriminator, new_discriminator, alpha=0.5)    # 선형혼합 하이퍼파라미터 수치 조정
 
         for i, (images, label) in enumerate(data_loader):
 
