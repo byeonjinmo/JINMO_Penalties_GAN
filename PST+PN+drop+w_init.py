@@ -13,7 +13,7 @@ batch_size = 100
 learning_rate = 0.0002
 img_size = 28 * 28
 num_channel = 1
-dir_name = "GAN_results_PSTx_+pn(0.5)+drop(0.25)"
+dir_name = "GAN_results_PSTx_+pn(0.7)+drop(0.25)+BN(1_3)"
 
 noise_size = 100
 hidden_size1 = 256
@@ -52,7 +52,7 @@ def mix_weights(old_model, new_model, alpha=0.1):
     new_model.load_state_dict(mixed_weights)
     return new_model
 
- # 렐루 , 리키렐루를 사용함으로 허 초기화 적
+ # 렐루 , 리키렐루를 사용함으로 허 초기화 적용
 def weights_init(m):
     classname = m.__class__.__name__
     if classname.find('Linear') != -1:
@@ -92,8 +92,11 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__()
 
         self.linear1 = nn.Linear(img_size, hidden_size3)
+        self.bn1 = nn.BatchNorm1d(hidden_size3)# 배치 정규화 적용
         self.linear2 = nn.Linear(hidden_size3, hidden_size2)
+        #self.bn1 = nn.BatchNorm1d(hidden_size2)# 배치 정규화 적용
         self.linear3 = nn.Linear(hidden_size2, hidden_size1)
+        #self.bn1 = nn.BatchNorm1d(hidden_size1) # 배치 정규화 적용
         self.linear4 = nn.Linear(hidden_size1, 1)
         # 드롭아웃 레이어 추가
         self.dropout = nn.Dropout(0.25)
@@ -113,8 +116,11 @@ class Discriminator1(nn.Module):
         super(Discriminator1, self).__init__()
 
         self.linear1 = nn.Linear(img_size, hidden_size2)
+        self.bn1 = nn.BatchNorm1d(hidden_size2) # 배치 정규화 적용
         self.linear2 = nn.Linear(hidden_size2, hidden_size1)
+        #self.bn1 = nn.BatchNorm1d(hidden_size1) # 배치 정규화 적용
         self.linear3 = nn.Linear(hidden_size1, hidden_size01)
+        #self.bn1 = nn.BatchNorm1d(hidden_size01)    # 배치 정규화 적용
         self.linear4 = nn.Linear(hidden_size01, 1)
         # 드롭아웃 레이어 추가
         self.dropout = nn.Dropout(0.25)
@@ -134,8 +140,11 @@ class Discriminator2(nn.Module):
         super(Discriminator2, self).__init__()
 
         self.linear1 = nn.Linear(img_size, hidden_size1)
+        self.bn1 = nn.BatchNorm1d(hidden_size1)  # 배치 정규화 적용
         self.linear2 = nn.Linear(hidden_size1, hidden_size01)
+        #self.bn1 = nn.BatchNorm1d(hidden_size01)  # 배치 정규화 적용
         self.linear3 = nn.Linear(hidden_size01, hidden_size0)
+        #self.bn1 = nn.BatchNorm1d(hidden_size0)  # 배치 정규화 적용
         self.linear4 = nn.Linear(hidden_size0, 1)
         # 드롭아웃 레이어 추가
         self.dropout = nn.Dropout(0.25)
@@ -156,8 +165,11 @@ class Generator(nn.Module):
         super(Generator, self).__init__()
 
         self.linear1 = nn.Linear(noise_size, hidden_size1)
+        self.bn1 = nn.BatchNorm1d(hidden_size1)  # 배치 정규화 적용
         self.linear2 = nn.Linear(hidden_size1, hidden_size2)
+        #self.bn1 = nn.BatchNorm1d(hidden_size2)  # 배치 정규화 적용
         self.linear3 = nn.Linear(hidden_size2, hidden_size3)
+        #self.bn1 = nn.BatchNorm1d(hidden_size3)  # 배치 정규화 적용
         self.linear4 = nn.Linear(hidden_size3, img_size)
         # 드롭아웃 레이어 추가
         self.dropout = nn.Dropout(0.25)
@@ -177,8 +189,11 @@ class Generator1(nn.Module):
         super(Generator1, self).__init__()
 
         self.linear1 = nn.Linear(noise_size, hidden_size01)
+        self.bn1 = nn.BatchNorm1d(hidden_size01)  # 배치 정규화 적용
         self.linear2 = nn.Linear(hidden_size01, hidden_size1)
+        #self.bn1 = nn.BatchNorm1d(hidden_size1)  # 배치 정규화 적용
         self.linear3 = nn.Linear(hidden_size1, hidden_size2)
+        #self.bn1 = nn.BatchNorm1d(hidden_size2)  # 배치 정규화 적용
         self.linear4 = nn.Linear(hidden_size2, img_size)
         # 드롭아웃 레이어 추가
         self.dropout = nn.Dropout(0.25)
@@ -199,8 +214,11 @@ class Generator2(nn.Module):
         super(Generator2, self).__init__()
 
         self.linear1 = nn.Linear(noise_size, hidden_size0)
+        self.bn1 = nn.BatchNorm1d(hidden_size0)  # 배치 정규화 적용
         self.linear2 = nn.Linear(hidden_size0, hidden_size01)
+        #self.bn1 = nn.BatchNorm1d(hidden_size01)  # 배치 정규화 적용
         self.linear3 = nn.Linear(hidden_size01, hidden_size1)
+        #self.bn1 = nn.BatchNorm1d(hidden_size1)  # 배치 정규화 적용
         self.linear4 = nn.Linear(hidden_size1, img_size)
         # 드롭아웃 레이어 추가
         self.dropout = nn.Dropout(0.25)
@@ -236,7 +254,7 @@ initial_no_penalty_epochs = 0  # 처음 에포크 동안은 패널티 없음
 Training part
 """
 # 정확한 모델 판별을 위한 각 손실 밑 퍼포먼스 값 csv파일로 저장하기 위한 코드
-with open('gan_training_metrics_PSTx_+pn(0.5)+drop(0.25).csv', mode='w', newline='') as file:
+with open('gan_training_metrics_PSTx_+pn(0.7)+drop(0.25)+BN(1_3).csv', mode='w', newline='') as file:
     writer = csv.writer(file)
     # Write the header
     writer.writerow(['Epoch', 'D_Loss', 'G_Loss', 'D_Performance', 'G_Performance'])
@@ -246,7 +264,7 @@ with open('gan_training_metrics_PSTx_+pn(0.5)+drop(0.25).csv', mode='w', newline
             # Transition for Generator
             new_generator = Generator1()
             generator = new_generator
-            generator = mix_weights(generator, new_generator, alpha=0.5)
+            generator = mix_weights(generator, new_generator, alpha=0.7)
 
             # Transition for Discriminator_
             # new_discriminator = Discriminator2()
@@ -255,11 +273,11 @@ with open('gan_training_metrics_PSTx_+pn(0.5)+drop(0.25).csv', mode='w', newline
 
         if opt.step == 2:
             new_generator = Generator()
-            generator = mix_weights(generator, new_generator, alpha=0.5)
+            generator = mix_weights(generator, new_generator, alpha=0.7)
 
             new_discriminator = Discriminator1()
             discriminator = new_discriminator
-            discriminator = mix_weights(discriminator, new_discriminator, alpha=0.5)
+            discriminator = mix_weights(discriminator, new_discriminator, alpha=0.7)
 
             # # Transition for Discriminator
             # new_discriminator = Discriminator()
