@@ -13,7 +13,7 @@ batch_size = 100
 learning_rate = 0.0002
 img_size = 28 * 28
 num_channel = 1
-dir_name = "GAN_results_PSTx_+pn(0.7)+drop(0.25)+BN(1_3)"
+dir_name = "GAN_results_PSTx_+pn(0.5)+drop(0.25)+BN(1_3)"
 
 noise_size = 100
 hidden_size1 = 256
@@ -37,7 +37,7 @@ class opt:
         step = 1
     elif epoch > 100:
         step = 2
-    elif epoch > 150:
+    elif epoch > 150: # 더 복잡한 모델 생성시 모델 추가 할 수 있음을 보여주는 스텝 3버전!
         step = 3
 
 # 모델 변경시 가중치 초기화 메커니즘 / 선형혼합 방식 약간 변경
@@ -255,7 +255,7 @@ initial_no_penalty_epochs = 0  # 처음 에포크 동안은 패널티 없음
 Training part
 """
 # 정확한 모델 판별을 위한 각 손실 밑 퍼포먼스 값 csv파일로 저장하기 위한 코드
-with open('gan_training_metrics_PSTx_+pn(0.7)+drop(0.25)+BN(1_3).csv', mode='w', newline='') as file:
+with open('gan_training_metrics_PSTx_+pn(0.5)+drop(0.25)+BN(1_3).csv', mode='w', newline='') as file:
     writer = csv.writer(file)
     # Write the header
     writer.writerow(['Epoch', 'D_Loss', 'G_Loss', 'D_Performance', 'G_Performance'])
@@ -337,11 +337,11 @@ with open('gan_training_metrics_PSTx_+pn(0.7)+drop(0.25)+BN(1_3).csv', mode='w',
             if g_loss < d_loss:
                 g_penalty_weight += 0.0002
                 d_penalty_weight = max(1.0, d_penalty_weight - 0.0001)
-                print(f"Epoch {epoch}: 생페.")
+                print(f"Epoch {epoch}: 생성자 페널티.")
             else:
                 d_penalty_weight += 0.0002
                 g_penalty_weight = max(1.0, g_penalty_weight - 0.0001)
-                print(f"Epoch {epoch}: 판페.")
+                print(f"Epoch {epoch}: 판별자 페널티.")
 
             if (i + 1) % 150 == 0:
                 print("Epoch [ {}/{} ]  Step [ {}/{} ]  d_loss : {:.5f}  g_loss : {:.5f}"
