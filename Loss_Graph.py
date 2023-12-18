@@ -19,8 +19,8 @@ discriminator_loss = latest_data_trimmed['Discriminator Loss']
 plt.figure(figsize=(15, 8))
 
 # Plotting the data with markers every 20 epochs
-plt.plot(latest_epochs, generator_loss, marker='o', linestyle='-', color='g', label=' Average Generator Loss', markevery=20)
-plt.plot(latest_epochs, discriminator_loss,  linestyle='-', color='m', label=' Average Discriminator Loss', markevery=20)
+plt.plot(latest_epochs, generator_loss, marker='o', linestyle='-', color='b', label=' Average Generator Loss', markevery=20)
+plt.plot(latest_epochs, discriminator_loss,  linestyle='-', color='r', label=' Average Discriminator Loss', markevery=20)
 
 # Setting the title and labels
 # plt.title('Generator and Discriminator Loss Over Epochs (Up to 1000 Epochs)', fontsize=14)
