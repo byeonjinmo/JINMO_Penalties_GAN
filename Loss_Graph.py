@@ -23,16 +23,16 @@ plt.plot(latest_epochs, generator_loss, marker='o', linestyle='-', color='g', la
 plt.plot(latest_epochs, discriminator_loss,  linestyle='-', color='m', label=' Average Discriminator Loss', markevery=20)
 
 # Setting the title and labels
-plt.title('Generator and Discriminator Loss Over Epochs (Up to 1000 Epochs)', fontsize=14)
-plt.xlabel('Epoch', fontsize=12)
-plt.ylabel('Loss', fontsize=12)
+# plt.title('Generator and Discriminator Loss Over Epochs (Up to 1000 Epochs)', fontsize=14)
+plt.xlabel('Epoch', fontsize=20)
+plt.ylabel('Average Loss', fontsize=20)
 
 # Customizing the x-axis and y-axis tick labels for better readability
-plt.xticks(range(0, 1001, 100), fontsize=10)
-plt.yticks(fontsize=10)
+plt.xticks(range(0, 1001, 100), fontsize=20)
+plt.yticks(fontsize=20)
 
 # Adding a legend and grid
-plt.legend(fontsize=10)
+plt.legend(fontsize=20)
 plt.grid(True)
 
 # Displaying the plot
