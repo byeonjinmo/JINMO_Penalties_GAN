@@ -9,15 +9,15 @@ new_data = pd.read_csv('/Users/mac/Desktop/11월16일까지 �
 plt.figure(figsize=(12, 6))
 
 # 원래 데이터 (점선, 찐한 파랑색, 굵은 선)
-plt.plot(data['Epoch'], data['Average D Accuracy'], label='Average D Accuracy (Original)', color='darkblue', linestyle='dotted', linewidth=2)
+plt.plot(data['Epoch'], data['Average D Accuracy'], label='Tradtional D Accuracy (Original)', color='darkblue', linestyle='dotted', linewidth=2)
 
 # 새로운 데이터 (실선, 찐한 파랑색, 굵은 선)
-plt.plot(new_data['Epoch'], new_data['Average D Accuracy'], label='Average D Accuracy (New)', color='darkblue', linestyle='solid', linewidth=2)
+plt.plot(new_data['Epoch'], new_data['Average D Accuracy'], label='Proposed D Accuracy (New)', color='darkblue', linestyle='solid', linewidth=2)
 
 # 그래프 설정
-plt.xlabel('Epoch')
-plt.ylabel('Accuracy')
-plt.title('Comparison of Average D Accuracy over Epochs (Updated)')
-plt.legend()
+plt.xlabel('Epoch', fontsize=20)
+plt.ylabel('Accuracy', fontsize=20)
+# plt.title('Comparison of Average D Accuracy over Epochs (Updated)')
+plt.legend(fontsize=20)
 plt.grid(True)
 plt.show()
