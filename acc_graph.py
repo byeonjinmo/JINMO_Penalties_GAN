@@ -13,10 +13,10 @@ new_data = new_data.loc[new_data['Epoch'] <= 1000]
 plt.figure(figsize=(12, 6))
 
 # 원래 데이터 (점선, 찐한 파랑색, 굵은 선)
-plt.plot(data['Epoch'], data['Average D Accuracy'], label='Tradtional D Accuracy (Original)', color='darkblue', linestyle='dotted', linewidth=2)
+plt.plot(data['Epoch'], data['Average D Accuracy'], label='Tradtional D Accuracy', color='darkblue', linestyle='dotted', linewidth=2)
 
 # 새로운 데이터 (실선, 찐한 파랑색, 굵은 선)
-plt.plot(new_data['Epoch'], new_data['Average D Accuracy'], label='Proposed D Accuracy (New)', color='darkblue', linestyle='solid', linewidth=2)
+plt.plot(new_data['Epoch'], new_data['Average D Accuracy'], label='Proposed D Accuracy', color='darkblue', linestyle='solid', linewidth=2)
 
 # 그래프 설정
 plt.xlabel('Epoch', fontsize=20)
